@@ -37,6 +37,8 @@ class photospace_plugin_options {
 
 		if (!is_array($options)) {
 
+			$options['enable_history'] = false;
+
 			$options['show_captions'] = false;
 			$options['show_play'] = false;
 			$options['show_next_prev'] = false;
@@ -48,6 +50,10 @@ class photospace_plugin_options {
 			$options['thumbnail_height'] = 50;
 			$options['thumbnail_crop'] = true;
 
+			$options['medium_width'] = 300;
+			$options['medium_height'] = 300;
+			$options['medium_crop'] = true;
+
 			$options['main_col_width'] = '400';
 			$options['main_col_height'] = '500';
 
@@ -56,6 +62,7 @@ class photospace_plugin_options {
 			$options['thumbnail_margin'] = 10;
 
 			$options['gallery_width'] = '600';
+			$options['gallery_height'] = false;
 
 			$options['play_text'] = 'Play Slideshow';
 			$options['pause_text'] = 'Pause Slideshow';
@@ -70,6 +77,12 @@ class photospace_plugin_options {
 	public static function update() {
 		if(isset($_POST['ps_save'])) {
 			$options = photospace_plugin_options::PS_getOptions();
+
+			if (isset($_POST['enable_history'])) {
+				$options['enable_history'] = (bool)true;
+			} else {
+				$options['enable_history'] = (bool)false;
+			}
 
 			if (isset($_POST['show_captions'])) {
 				$options['show_captions'] = (bool)true;
@@ -102,6 +115,14 @@ class photospace_plugin_options {
 				$options['thumbnail_crop'] = (bool)false;
 			}
 
+			$options['medium_width'] = stripslashes($_POST['medium_width']);
+			$options['medium_height'] = stripslashes($_POST['medium_height']);
+			if (isset($_POST['medium_crop'])) {
+				$options['medium_crop'] = (bool)true;
+			} else {
+				$options['medium_crop'] = (bool)false;
+			}
+
 			$options['main_col_width'] = stripslashes($_POST['main_col_width']);
 			$options['main_col_height'] = stripslashes($_POST['main_col_height']);
 
@@ -110,6 +131,11 @@ class photospace_plugin_options {
 			$options['thumbnail_margin'] =  stripslashes($_POST['thumbnail_margin']);
 
 			$options['gallery_width'] = stripslashes($_POST['gallery_width']);
+			if (isset($_POST['gallery_height'])) {
+				$options['gallery_height'] = (bool)true;
+			} else {
+				$options['gallery_height'] = (bool)false;
+			}
 
 			$options['play_text'] = stripslashes($_POST['play_text']);
 			$options['pause_text'] = stripslashes($_POST['pause_text']);
@@ -145,6 +171,10 @@ class photospace_plugin_options {
 									<legend class="screen-reader-text">
 										<span>Formatting</span>
 									</legend>
+									<label for="enable_history">
+										<input name="enable_history" id="enable_history" type="checkbox" value="checkbox" <?php if($options['enable_history']) echo "checked='checked'"; ?> /> Enable history
+									</label>
+									<br>
 									<label for="show_captions">
 										<input name="show_captions" id="show_captions" type="checkbox" value="checkbox" <?php if($options['show_captions']) echo "checked='checked'"; ?> /> Show title / caption / description
 									</label>
@@ -198,6 +228,18 @@ class photospace_plugin_options {
 								<br>
 								<input name="thumbnail_crop" id="thumbnail_crop" type="checkbox" value="checkbox" <?php if($options['thumbnail_crop']) echo "checked='checked'"; ?> />
 								<label for="thumbnail_crop">Crop thumbnail to exact dimensions (normally thumbnails are proportional)</label>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">Medium size</th>
+							<td>
+								<label for="medium_width">Width</label>
+								<input name="medium_width" id="medium_width" type="number" value="<?php echo($options['medium_width']); ?>" class="small-text" />
+								<label for="medium_height">Height</label>
+								<input name="medium_height" id="medium_height" type="number" value="<?php echo($options['medium_height']); ?>" class="small-text" />
+								<br>
+								<input name="medium_crop" id="medium_crop" type="checkbox" value="checkbox" <?php if($options['medium_crop']) echo "checked='checked'"; ?> />
+								<label for="medium_crop">Crop medium images to exact dimensions (normally medium images are proportional)</label>
 							</td>
 						</tr>
 						<tr>
@@ -260,6 +302,18 @@ class photospace_plugin_options {
 								<input name="gallery_width" id="gallery_width" type="number" value="<?php echo($options['gallery_width']); ?>" />
 								<br>
 								<p>(at least Thumbnail column + Main image width)</p>
+							</td>
+						</tr>
+						<tr>
+							<th>Fill to height</th>
+							<td>
+								<fieldset>
+									<legend class="screen-reader-text">
+										<span>Fill to height</span>
+									</legend>
+									<label for="gallery_height">
+										<input name="gallery_height" id="gallery_height" type="checkbox" value="checkbox" <?php if($options['gallery_height']) echo "checked='checked'"; ?> /> Allow the gallery images to fill browser height
+									</label>
 							</td>
 						</tr>
 					</tbody>
@@ -328,16 +382,25 @@ $options = get_option('ps_options');
 
 add_theme_support( 'post-thumbnails' );
 add_image_size('photospace_thumbnails', $options['thumbnail_width'], $options['thumbnail_height'], $options['thumbnail_crop']);
+add_image_size('photospace_medium', $options['medium_width'], $options['medium_height'], $options['medium_crop']);
 add_image_size('photospace_full', $options['main_col_width'], $options['main_col_height']);
 
 //============================== insert HTML header tag ========================//
 
 function photospace_scripts_method() {
 	wp_enqueue_script('jquery');
-	$photospace_wp_plugin_path = site_url()."/wp-content/plugins/photospace";
+	$photospace_wp_plugin_path = site_url()."/wp-content/plugins/galleriffic-wordpress";
 	wp_enqueue_script( 'galleriffic', 		$photospace_wp_plugin_path . '/jquery.galleriffic.js');
 }
 add_action('wp_enqueue_scripts', 'photospace_scripts_method');
+
+function photospace_scripts_method_history() {
+	$photospace_wp_plugin_path = site_url()."/wp-content/plugins/galleriffic-wordpress";
+	wp_enqueue_script( 'history', 		$photospace_wp_plugin_path . '/jquery.history.js');
+}
+if ($options['enable_history']) {
+	add_action('wp_enqueue_scripts', 'photospace_scripts_method_history');
+}
 
 function photospace_wp_headers() {
 
@@ -352,10 +415,24 @@ function photospace_wp_headers() {
 				}
 		';
 
-	if(!empty($options['thumbnail_height']))
+	if(!empty($options['thumbnail_height']) && !$options['gallery_height'])
 		echo '
 				.photospace .thumbnail-container li {
 					height:'. $options['thumbnail_height'] .'px;
+				}
+		';
+
+	if(!empty($options['medium_width']))
+		echo '
+				.photospace .medium-container li {
+					width:'. $options['medium_width'] .'px;
+				}
+		';
+
+	if(!empty($options['medium_height']))
+		echo '
+				.photospace .medium-container li {
+					height:'. $options['medium_height'] .'px;
 				}
 		';
 
@@ -367,8 +444,9 @@ function photospace_wp_headers() {
 				}
 		';
 
-	if(!empty($options['main_col_height']))
+	if(!empty($options['main_col_height']) && !$options['gallery_height'])
 		echo '
+			@media only screen and (max-width: 1199px) and (min-width: 992px), only screen and (min-width: 1200px) {
 				.photospace .slideshow a.advance-link,
 				.photospace .slideshow .image-wrapper img {
 					max-height:'. $options['main_col_height'] .'px !important;
@@ -377,6 +455,7 @@ function photospace_wp_headers() {
 				.photospace .slideshow-container {
 					height:'. $options['main_col_height'] .'px !important;
 				}
+			}
 		';
 
 	if(!empty($options['thumb_col_width']))
@@ -388,7 +467,7 @@ function photospace_wp_headers() {
 
 	if(!empty($options['thumbnail_margin']))
 		echo '
-				.photospace .thumbnail-container li {
+				.photospace .thumbnail-container li a {
 					margin-bottom:'. $options['thumbnail_margin'] .'px !important;
 					margin-right:'. $options['thumbnail_margin'] .'px !important;
 				}
@@ -434,6 +513,7 @@ function photospace_shortcode( $atts ) {
 		'transition_speed'	=> $options['transition_speed'],
 		'num_thumb'					=> $options['num_thumb'],
 		'num_preload'				=> $options['num_thumb'],
+		'gallery_height'		=> $options['gallery_height'],
 		'horizontal_thumb'	=> 0,
 		'order'							=> 'ASC',
 		'orderby'						=> 'menu_order ID',
@@ -467,7 +547,7 @@ function photospace_shortcode( $atts ) {
 				}
 
 				$output_buffer .='
-				<ul class="thumbs noscript">
+				<ul class="thumbs noscript" id="thumbs-shuffle">
 				';
 
 				if ( !empty($include) ) {
@@ -487,8 +567,10 @@ function photospace_shortcode( $atts ) {
 
 				if ( !empty($attachments) ) {
 					foreach ( $attachments as $aid => $attachment ) {
+
 						$img = wp_get_attachment_image_src( $aid , 'photospace_full');
 						$thumb = wp_get_attachment_image_src( $aid , 'photospace_thumbnails');
+						$medium = wp_get_attachment_image_src( $aid , 'photospace_medium');
 						$full = wp_get_attachment_image_src( $aid , 'full');
 						$_post = get_post($aid);
 
@@ -497,10 +579,17 @@ function photospace_shortcode( $atts ) {
 						$image_caption = $_post->post_excerpt;
 						$image_description = $_post->post_content;
 
+						// print "<pre>";
+						// print_r($image_title);
+						// print "</pre>";
+
+						$image_slug = preg_replace('/[^A-Za-z0-9 ]/', '', $image_alttext);
+						$image_slug = strtolower(str_replace(' ', '-', $image_slug));
+
 						$output_buffer .='
-							<li>
-								<a class="thumb" href="' . $img[0] . '" title="' . $image_title . '" >
-									<img src="' . $thumb[0] . '" alt="' . $image_alttext . '" title="' . $image_title . '" data-caption="' .  $image_caption . '" data-desc="' .  $image_description . '" />';
+							<li class="thumb-item">
+								<a class="thumb-bg thumb" href="' . $img[0] . '" name="' . $image_slug . '" title="' . $image_title . '" >
+									<img src="' . $thumb[0] . '" class="thumb-img" data-bg-mobile="' . $medium[0] . '" data-bg-desktop="' . $thumb[0] . '" alt="' . $image_alttext . '" title="' . $image_title . '" data-caption="' .  $image_caption . '" data-desc="' .  $image_description . '" />';
 									if($image_caption != ''){
 										$output_buffer .='
 											<span class="thumb-caption">' .  $image_caption . '</span>
@@ -543,12 +632,12 @@ function photospace_shortcode( $atts ) {
 				</ul>
 			</div>
 
-			<div id="slides_'.$post_id.'" class="slideshow-container">
-				<div id="loading_'.$post_id.'" class="loader">
-					<div class="loader-inner ball-scale">
-						<div></div>
-					</div>
+			<div id="loading_'.$post_id.'" class="loader">
+				<div class="loader-inner ball-scale">
+					<div></div>
 				</div>
+			</div>
+			<div id="slides_'.$post_id.'" class="slideshow-container">
 				<div id="slideshow_'.$post_id.'" class="slideshow"></div>
 				<div id="controls_'.$post_id.'" class="controls"></div>
 				<div id="caption_'.$post_id.'" class="caption-container"></div>
@@ -561,6 +650,57 @@ function photospace_shortcode( $atts ) {
 
 			jQuery(document).ready(function($) {
 
+				var windowHeight = $(window).height() - 135;
+				var breakpoint = 768;
+				var altbreakpoint = 991;
+
+				$.fn.showSlides = function() {
+					var gallery = $('.slideshow-container')
+					var thumbs = $('.thumbnail-container')
+
+					thumbs.fadeOut()
+					setTimeout(function() {
+						gallery.fadeIn()
+
+						if (typeof jQuery.fn.resizeImage === 'function') {
+							$('.slideshow-container').resizeImage();
+						}
+					}, 500);
+				}
+
+				$.fn.showThumbs = function () {
+					var gallery = $('.slideshow-container')
+					var thumbs = $('.thumbnail-container')
+
+					gallery.fadeOut()
+					setTimeout(function() {
+						thumbs.fadeIn()
+					}, 500);
+				}
+
+				$('.slideshow-container').hide();
+				$('.thumbnail-container').hide();
+				$('.controls').hide();
+				$('.photospace').css({'height': windowHeight});
+				$('.loader').show();
+
+				$(document).on('click', '.view a', function(e) {
+					e.preventDefault()
+					$(e).showThumbs()
+				});
+
+				$(document).on('click', '.thumb', function(e) {
+					e.preventDefault()
+					$(e).showSlides()
+
+					$(this).parent().addClass('selected').siblings().removeClass('selected')
+
+					if ($(window).innerWidth() <= breakpoint) {
+						e.preventDefault()
+						e.stopPropagation()
+					}
+				});
+
 				// We only want these styles applied when javascript is enabled
 				$('.slideshow-container').css('display', 'block');
 
@@ -568,7 +708,7 @@ function photospace_shortcode( $atts ) {
 				var gallery = $('#thumbs_".$post_id."').galleriffic({
 					delay:											" . intval($delay) . ",
 					numThumbs:									" . intval($num_thumb) . ",
-					preloadAhead:								" . intval($num_preload) . ",
+					preloadAhead:								'-1',
 					enableTopPager:							false,
 					enableBottomPager:					false,
 					imageContainerSel:					'#slideshow_".$post_id."',
@@ -581,7 +721,7 @@ function photospace_shortcode( $atts ) {
 					pauseLinkText:							'". $options['pause_text'] ."',
 					prevLinkText:								'". $options['previous_text'] ."',
 					nextLinkText:								'". $options['next_text'] ."',
-					enableHistory:							false,
+					enableHistory:							" . intval($options['enable_history']) . ",
 					autoStart:									" . intval($auto_play) . ",
 					enableKeyboardNavigation:		true,
 					syncTransitions:						false,
@@ -594,10 +734,15 @@ function photospace_shortcode( $atts ) {
 					onTransitionIn:							function(slide, caption, isSync) {
 						var duration = this.getDefaultTransitionDuration(isSync);
 						slide.fadeTo(duration, 1.0);
+						$('.controls').fadeTo(duration, 1.0);
 
 						// Position the caption at the bottom of the image and set its opacity
 						var slideImage = slide.find('img');
 						caption.fadeTo(duration, 1.0);
+
+						if (typeof jQuery.fn.resizeImage === 'function') {
+							$('.slideshow-container').resizeImage();
+						}
 
 					},
 					onPageTransitionOut:				function(callback) {
@@ -605,10 +750,72 @@ function photospace_shortcode( $atts ) {
 						// setTimeout(callback, 100); // wait a bit
 					},
 					onPageTransitionIn:					function() {
-						// this.fadeTo('fast', 1.0);
+						this.fadeTo('fast', 1.0);
 					}
 
-				});
+				});";
+
+				if($gallery_height){
+					$output_buffer .= "
+						jQuery.fn.resizeImage = function () {
+							var containerWidth = $('#main').width();
+							if ($('.slideshow-container img').height() !== 0 && $('.slideshow-container img').width() !== 0 && $('.slideshow-container img').height() !== 'undefined' && $('.slideshow-container img').width() !== 'undefined') {
+								var currentHeight = $('.slideshow-container img').height();
+								var currentWidth = $('.slideshow-container img').width();
+							}
+
+							var ratio = Math.min(containerWidth / currentWidth, windowHeight / currentHeight);
+							var width = Math.round(ratio * currentWidth);
+							var height = Math.round(ratio * currentHeight);
+
+							$('.slideshow-container, .loader, .aside').css({'height': windowHeight});
+							$('.thumbnail-container').css({'max-height': windowHeight});
+							$('.slideshow').css({'height': windowHeight, 'max-width': containerWidth});
+							$('.thumbs').css({'height': windowHeight, 'max-width': containerWidth});
+
+							if (currentWidth < currentHeight) {
+								$('.slideshow-container img').css({'height': '100%'})
+							} else if (currentHeight < currentWidth) {
+								$('.slideshow-container img').css({'width': width})
+							}
+
+						}
+
+						$(window).on('resize orientationchange', function() {
+							windowHeight = $(window).height() - 135;
+
+							$('.slideshow-container').resizeImage();
+						});
+					";
+				}
+
+				if ($options['enable_history']) {
+					$output_buffer .= "
+
+						function pageload(hash) {
+							if(hash) {
+								$.galleriffic.gotoImage(hash);
+							} else {
+								gallery.gotoIndex(0);
+							}
+						}
+
+						$.historyInit(pageload, 'advanced.html');
+
+						$('a[rel=history]').live('click', function(e) {
+							if (e.button != 0) return true;
+
+							var hash = this.href;
+							hash = hash.replace(/^.*#/, '');
+
+							$.historyLoad(hash);
+
+							return false;
+						});
+					";
+				}
+
+			$output_buffer .= "
 
 			});
 
