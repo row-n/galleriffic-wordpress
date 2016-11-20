@@ -408,34 +408,6 @@ function photospace_wp_headers() {
 
 	echo '<style type="text/css">';
 
-	if(!empty($options['thumbnail_width']))
-		echo '
-				.photospace .thumbnail-container li {
-					width:'. $options['thumbnail_width'] .'px;
-				}
-		';
-
-	if(!empty($options['thumbnail_height']) && !$options['gallery_height'])
-		echo '
-				.photospace .thumbnail-container li {
-					height:'. $options['thumbnail_height'] .'px;
-				}
-		';
-
-	if(!empty($options['medium_width']))
-		echo '
-				.photospace .medium-container li {
-					width:'. $options['medium_width'] .'px;
-				}
-		';
-
-	if(!empty($options['medium_height']))
-		echo '
-				.photospace .medium-container li {
-					height:'. $options['medium_height'] .'px;
-				}
-		';
-
 	if(!empty($options['main_col_width']))
 		echo '
 				.photospace .slideshow-container,
@@ -467,9 +439,8 @@ function photospace_wp_headers() {
 
 	if(!empty($options['thumbnail_margin']))
 		echo '
-				.photospace .thumbnail-container li a {
+				.photospace .thumbnail-container li {
 					margin-bottom:'. $options['thumbnail_margin'] .'px !important;
-					margin-right:'. $options['thumbnail_margin'] .'px !important;
 				}
 		';
 
