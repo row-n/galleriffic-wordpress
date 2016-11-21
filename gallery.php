@@ -408,6 +408,20 @@ function photospace_wp_headers() {
 
 	echo '<style type="text/css">';
 
+	if(!empty($options['thumbnail_width']))
+		echo '
+				.photospace .thumbnail-container li {
+					width:'. $options['thumbnail_width'] .'px;
+				}
+		';
+
+	if(!empty($options['thumbnail_height']) && !$options['gallery_height'])
+		echo '
+				.photospace .thumbnail-container li {
+					height:'. $options['thumbnail_height'] .'px;
+				}
+		';
+
 	if(!empty($options['main_col_width']))
 		echo '
 				.photospace .slideshow-container,
