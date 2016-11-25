@@ -446,8 +446,7 @@ function photospace_wp_headers() {
 
 	if(!empty($options['thumb_col_width']))
 		echo '
-				.photospace .thumbnail-container,
-				.gallery-listing {
+				.photospace .thumbnail-container {
 					max-width:'. $options['thumb_col_width'] .'px !important;
 				}
 		';
@@ -667,6 +666,7 @@ function photospace_shortcode( $atts ) {
 				$('.slideshow-container').hide();
 				$('.thumbnail-container').hide();
 				$('.controls').hide();
+				$('.photospace').css({'height': windowHeight});
 				$('.loader').show();
 
 				$(document).on('click', '.view a', function(e) {
@@ -756,7 +756,7 @@ function photospace_shortcode( $atts ) {
 							$('.slideshow-container, .loader').css({'height': windowHeight});
 							$('.thumbnail-container').css({'max-height': windowHeight});
 							$('.slideshow').css({'height': windowHeight, 'max-width': containerWidth});
-							$('.thumbs').css({'height': windowHeight, 'max-width': containerWidth});
+							$('.thumbs').css({'height': windowHeight});
 
 							if (currentWidth < currentHeight) {
 								$('.slideshow-container img').css({'height': '100%'})
